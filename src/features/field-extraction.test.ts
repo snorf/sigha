@@ -23,6 +23,10 @@ describe("field extraction", () => {
     });
   });
 
+  it("infers Boolean from the operand of unary !", () => {
+    expect(fields("!Active__c")[0]!.inferredType).toBe("Boolean");
+  });
+
   it("infers Number from arithmetic", () => {
     expect(fields("Amount * 2")[0]!.inferredType).toBe("Number");
   });

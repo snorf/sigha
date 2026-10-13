@@ -424,12 +424,9 @@ class Lexer {
           this.pos++; // `!=`
           return this.token("operator", start, leading);
         }
-        this.error(
-          "unexpected-character",
-          span(start, this.pos),
-          t().syntax.lexer.unexpectedBang,
-        );
-        return this.token("error", start, leading);
+        // A lone `!` is the prefix logical-NOT operator (Formula.g4
+        // `BANG : '!'`); the parser decides whether it is in a valid position.
+        return this.token("operator", start, leading);
       default: {
         // Consume a full code point so an astral character (emoji) yields one
         // error token with a real hex, not two mojibake surrogate halves.

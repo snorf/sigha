@@ -232,6 +232,48 @@ describe("engine: logical short-circuit and null coercion", () => {
   });
 });
 
+// Formula.g4 `unaryExpression : ... | BANG unaryExpression #unaryExpression_bang`
+// is rewritten to NOT by the formula-engine visitor, so `!x` must equal NOT(x).
+describe("engine: unary ! is logical NOT", () => {
+  it("negates boolean literals and nests", () => {
+    expect(b("!TRUE")).toBe(false);
+    expect(b("!FALSE")).toBe(true);
+    expect(b("!!TRUE")).toBe(true);
+    expect(b("!(1 > 2)")).toBe(true);
+  });
+
+  it("applies to function results", () => {
+    expect(b('!ISBLANK("")')).toBe(false);
+    expect(b('!ISBLANK("x")')).toBe(true);
+  });
+
+  it("binds tighter than binary operators, like -", () => {
+    expect(b("!FALSE && FALSE")).toBe(false);
+    expect(b("!FALSE || FALSE")).toBe(true);
+  });
+
+  it("leaves != as inequality", () => {
+    expect(b("1 != 2")).toBe(true);
+    expect(b("1 != 1")).toBe(false);
+  });
+
+  it("matches NOT() for a blank boolean in both blank modes", () => {
+    const fields = { Flag: blank("Boolean") };
+    for (const blankMode of ["zero", "blank"] as const) {
+      expect(ev("!Flag", { fields, blankMode })).toEqual(
+        ev("NOT(Flag)", { fields, blankMode }),
+      );
+    }
+  });
+
+  it("matches NOT() for non-blank field values", () => {
+    for (const v of [true, false]) {
+      const fields = { Flag: bool(v) };
+      expect(ev("!Flag", { fields })).toEqual(ev("NOT(Flag)", { fields }));
+    }
+  });
+});
+
 describe("engine: text and math functions", () => {
   it("evaluates text functions", () => {
     expect(n('LEN("hello")')).toBe("5");

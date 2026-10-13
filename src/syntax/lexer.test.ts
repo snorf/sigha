@@ -146,10 +146,22 @@ describe("lexer: operators", () => {
     );
   });
 
-  it("lexes a lone ! as an error token", () => {
+  // Formula.g4 / LexerRules.g4: `BANG : '!'` is a token of its own, distinct
+  // from the `!=` comparison; the parser makes it a prefix NOT.
+  it("lexes a lone ! as an operator token", () => {
     const { tokens, diagnostics } = lex("!");
-    expect(tokens[0]!.kind).toBe("error");
-    expect(diagnostics[0]!.code).toBe("unexpected-character");
+    expect(tokens[0]!.kind).toBe("operator");
+    expect(tokens[0]!.text).toBe("!");
+    expect(diagnostics).toEqual([]);
+  });
+
+  it("keeps != as one operator and leaves ! inside a string untouched", () => {
+    expect(kinds('1 != 2 "a!b"')).toEqual([
+      ["number", "1"],
+      ["operator", "!="],
+      ["number", "2"],
+      ["string", '"a!b"'],
+    ]);
   });
 });
 

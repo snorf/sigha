@@ -44,7 +44,7 @@ export function extractFields(ast: Expr): ExtractedField[] {
         walk(node.expr, expected);
         return;
       case "UnaryOp":
-        walk(node.operand, "Number");
+        walk(node.operand, node.op === "!" ? "Boolean" : "Number");
         return;
       case "BinaryOp":
         walkBinary(node, walk);

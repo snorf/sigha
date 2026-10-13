@@ -40,6 +40,21 @@ describe("checker: function validation", () => {
   });
 });
 
+describe("checker: unary ! (Formula.g4 BANG, same typing as NOT)", () => {
+  it("accepts a boolean operand and a field of unknown type", () => {
+    expect(codes("!ISBLANK(Amount)")).toEqual([]);
+    expect(codes("!Flag__c")).toEqual([]);
+  });
+
+  it("flags a non-boolean operand", () => {
+    expect(codes("!1")).toContain("operator-type-mismatch");
+  });
+
+  it("types ! as Boolean, so it satisfies IF's condition", () => {
+    expect(codes("IF(!ISBLANK(Amount), 1, 2)")).toEqual([]);
+  });
+});
+
 describe("checker: per-context arity (org-verified: TRUNC)", () => {
   it("accepts single-argument TRUNC in formula fields", () => {
     expect(codes("TRUNC(1.5)", "formula_field")).not.toContain("wrong-arity");

@@ -121,6 +121,14 @@ describe("formatter: canonical output", () => {
     expect(f("-1")).toBe("-1");
   });
 
+  // Formula.g4 BANG unaryExpression: prefix `!` prints without a space.
+  it("round-trips unary ! unchanged", () => {
+    expect(f("!ISBLANK(x)")).toBe("!ISBLANK(x)");
+    expect(f("! ISBLANK(x)")).toBe("!ISBLANK(x)");
+    expect(f("!(a && b)")).toBe("!(a && b)");
+    expect(f("a != b")).toBe("a != b");
+  });
+
   it("preserves explicit parentheses", () => {
     expect(f("(1+2)*3")).toBe("(1 + 2) * 3");
     expect(f("1+2*3")).not.toContain("(");
