@@ -109,6 +109,29 @@ describe("parser: field references", () => {
     });
   });
 
+  // formula-engine names a polymorphic relationship "Owner:User"
+  // (FormulaUtils.getPolymorphicFieldName); the colon stays inside the segment.
+  it("parses Relationship:Object.Field as a two-segment path", () => {
+    expect(expectClean("Owner:User.Email")).toMatchObject({
+      kind: "FieldRef",
+      path: ["Owner:User", "Email"],
+      isGlobal: false,
+    });
+    expect(expectClean("Owner:Group.Name")).toMatchObject({
+      path: ["Owner:Group", "Name"],
+    });
+    expect(expectClean("Owner:Queue.QueueName")).toMatchObject({
+      path: ["Owner:Queue", "QueueName"],
+    });
+  });
+
+  it("keeps Relationship:Object paths usable inside calls", () => {
+    expect(expectClean("ISBLANK(Owner:User.Email)")).toMatchObject({
+      kind: "FunctionCall",
+      args: [{ kind: "FieldRef", path: ["Owner:User", "Email"] }],
+    });
+  });
+
   it("flags global references", () => {
     expect(expectClean("$User.Id")).toMatchObject({
       kind: "FieldRef",

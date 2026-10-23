@@ -445,6 +445,45 @@ describe("lexer: confusable characters", () => {
     expect(tokens[0]!.text).toBe(source);
   });
 
+  // LexerRules.g4 COLON / FormulaUtils.getPolymorphicFieldName: "Owner:User"
+  // is one relationship segment, followed by the usual dot and field.
+  it("lexes Owner:User.Email as one identifier segment, a dot and a field", () => {
+    const { tokens, diagnostics } = lex("Owner:User.Email");
+    expect(diagnostics).toEqual([]);
+    expect(
+      tokens.filter((t) => t.kind !== "eof").map((t) => [t.kind, t.text]),
+    ).toEqual([
+      ["identifier", "Owner:User"],
+      ["dot", "."],
+      ["identifier", "Email"],
+    ]);
+  });
+
+  it("does not touch a colon inside string literals", () => {
+    expect(kinds("\"Owner:User.Email\" 'a:b'")).toEqual([
+      ["string", '"Owner:User.Email"'],
+      ["string", "'a:b'"],
+    ]);
+  });
+
+  it("still diagnoses a colon without a following identifier", () => {
+    for (const source of ["Owner: User", "Owner:", "Owner:1"]) {
+      const { diagnostics } = lex(source);
+      expect(diagnostics.map((d) => d.code)).toContain("unexpected-character");
+    }
+  });
+
+  it("leaves $User.Email and plain dotted paths unchanged", () => {
+    expect(kinds("$User.Email Account.Name")).toEqual([
+      ["identifier", "$User"],
+      ["dot", "."],
+      ["identifier", "Email"],
+      ["identifier", "Account"],
+      ["dot", "."],
+      ["identifier", "Name"],
+    ]);
+  });
+
   it("lexes an astral character as one error token with one diagnostic", () => {
     const source = "\uD83C\uDF89"; // U+1F389 PARTY POPPER
     const { tokens, diagnostics } = lex(source);
